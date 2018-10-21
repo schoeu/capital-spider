@@ -15,6 +15,7 @@ def executemany(str, data):
         conn.commit()
     except Exception as e:
         print('Sql err: ' ,e)
+        print(data, '~~~~~~~error')
         conn.rollback()
 
 def execute(str, data):

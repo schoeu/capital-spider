@@ -11,10 +11,16 @@ import json
 
 config = conf.getconfig()
 
+ids = []
+typeinfos = []
+
+# get news list data by new type.
 def gettypepage(url):
     ts = config['newstype']
     for i in ts:
         v = 0
+        global typeinfos
+        typeinfos = []
         while True:
             rurl = url.format(type= i, pagenum= v)
             r = requests.get(rurl)
@@ -22,36 +28,46 @@ def gettypepage(url):
             if content:
                 rsstr = content.decode(encoding = "utf-8")[5:-1]
                 rs = json.loads(rsstr)
-                typeinfofilter(rs)
+                ct = typeinfofilter(rs)
 
             v += 1
             #if len(rs['data']) > 0:
-            print(v, i)
-            if v > 500:
+            if len(ct) > 1 or v > 5000:
+                contentrs = getpagecontent(ct)
+                savetypeinfo(ct)
+                savecontentdata(contentrs)
+                print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), i, '类型， 插入', len(ct), '条数据')
                 break
-    
+
+# news data filter.
 def typeinfofilter(rs):
-    ctt = []
     if rs and len(rs['data']) > 0:
         for i in rs['data']:
-            filter = (i['rowkey'], i['date'], i['hotnews'], i['isvideo'], i['lbimg'][0]['src'], '$$'.join([i['src'] for i in i['miniimg']]), i['source'], i['topic'].replace("'","\\\'"), i['url'], i['urlfrom'], i['type'], i['urlpv'], i['clkrate'], str(i['ctrtime']))
-            ctt.append(filter)
+            if not i['rowkey'] in ids:
+                ids.append(i['rowkey'])
+                filter = (i['rowkey'], i['date'], i['hotnews'], i['isvideo'], i['lbimg'][0]['src'], '$$'.join([i['src'] for i in i['miniimg']]), i['source'], i['topic'].replace("'","\\\'"), i['url'], i['urlfrom'], i['type'], i['urlpv'], i['clkrate'], str(i['ctrtime']))
+                if filter and len(filter) == 14:
+                    typeinfos.append(filter)
+    return typeinfos
+
+# save type info.
+def savetypeinfo(ctt):
     basesql = 'insert into articles (row_key, date, hot_news, is_video, lb_img, thumbnail_pics, source, topic, url, url_from, category, url_pv, click_rate, ctr_time) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
     db.executemany(basesql, ctt)
 
-def getpagecontent():
-    idx = 0
-    sql = 'select distinct row_key, url from articles'
-    cursor = db.select(sql)
-    rs = cursor.fetchall()
-    for i in rs:
-        u = i[1]
+# get news content.
+def getpagecontent(ct):
+    ctt = []
+    for i in ct:
+        u = i[8]
         if u:
             content = utils.gethtml(u)
-            contentfilter(u, i[0], content)
-            idx += 1
-            print(idx, u)
+            rs = contentfilter(u, i[0], content)
+            if rs and len(rs) == 6:
+                ctt.append(rs)
+    return ctt 
 
+# news content filter
 def contentfilter(u, rk, rs):
     soup = BeautifulSoup(rs, "lxml")
     # parse main page info
@@ -81,18 +97,29 @@ def contentfilter(u, rk, rs):
                         'name': 'img',
                         'content': src
                     })
+    return rk, t, title, json.dumps(ctt), s, u
     
-
+# save news content to db.
+def savecontentdata(data):
     # save data
     basesql = 'insert into article_contents (row_key, date, topic, content, source, url) values (%s, %s, %s, %s, %s, %s)'
-    db.execute(basesql, (rk, t, title, json.dumps(ctt), s, u))
+    db.executemany(basesql, data)
 
+# get news ids.
+def getexistingid():
+    global ids
+    sql = 'SELECT row_key FROM article_contents'
+    cursor = db.select(sql)
+    rs = cursor.fetchall()
+    ids = [i[0] for i in rs]
+
+# main
 def main():
-    # get list data
-    #gettypepage(config['url'])
+    # update existing id
+    getexistingid()
 
-    # get content data
-    getpagecontent()
+    # get list data
+    gettypepage(config['url'])
 
     # finally
     db.closeconn()
