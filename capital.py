@@ -32,11 +32,11 @@ def gettypepage(url):
 
             v += 1
             #if len(rs['data']) > 0:
-            if len(ct) > 1 or v > 5000:
+            if len(ct) > 200 or v > 5000:
                 contentrs = getpagecontent(ct)
                 savetypeinfo(ct)
                 savecontentdata(contentrs)
-                print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), i, '类型， 插入', len(ct), '条数据')
+                print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), i, len(ct))
                 break
 
 # news data filter.
