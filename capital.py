@@ -45,14 +45,14 @@ def typeinfofilter(rs):
         for i in rs['data']:
             if not i['rowkey'] in ids:
                 ids.append(i['rowkey'])
-                filter = (i['rowkey'], i['date'], i['hotnews'], i['isvideo'], i['lbimg'][0]['src'], '$$'.join([i['src'] for i in i['miniimg']]), i['source'], i['topic'].replace("'","\\\'"), i['url'], i['urlfrom'], i['type'], i['urlpv'], i['clkrate'], str(i['ctrtime']))
+                filter = (i['rowkey'], i['date'], i['hotnews'], i['lbimg'][0]['src'], '$$'.join([i['src'] for i in i['miniimg']]), i['source'], i['topic'].replace("'","\\\'"), i['url'], i['urlfrom'], i['type'], i['urlpv'])
                 if filter and len(filter) == 14:
                     typeinfos.append(filter)
     return typeinfos
 
 # save type info.
 def savetypeinfo(ctt):
-    basesql = 'insert into articles (row_key, date, hot_news, is_video, lb_img, thumbnail_pics, source, topic, url, url_from, category, url_pv, click_rate, ctr_time) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
+    basesql = 'insert into articles (row_key, date, hot_news, lb_img, thumbnail_pics, source, topic, url, url_from, category, url_pv) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
     db.executemany(basesql, ctt)
 
 # get news content.
