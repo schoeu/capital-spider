@@ -8,11 +8,13 @@ import utils
 import db
 import conf
 import json
+import datetime
 
 config = conf.getconfig()
 
 ids = []
 typeinfos = []
+yesterday = str(datetime.date.today() - datetime.timedelta(days=1))
 
 # get news list data by new type.
 def gettypepage(url):
@@ -29,10 +31,8 @@ def gettypepage(url):
                 rsstr = content.decode(encoding = "utf-8")[5:-1]
                 rs = json.loads(rsstr)
                 ct = typeinfofilter(rs)
-
             v += 1
-            #if len(rs['data']) > 0:
-            if len(ct) > 150 or v > 1000:
+            if  len(ct) > 150 or v > 1000:
                 contentrs = getpagecontent(ct)
                 savetypeinfo(ct)
                 savecontentdata(contentrs)
@@ -46,7 +46,7 @@ def typeinfofilter(rs):
             if not i['rowkey'] in ids:
                 ids.append(i['rowkey'])
                 filter = (i['rowkey'], i['date'], i['hotnews'], i['lbimg'][0]['src'], '$$'.join([i['src'] for i in i['miniimg']]), i['source'], i['topic'].replace("'","\\\'"), i['url'], i['urlfrom'], i['type'], i['urlpv'])
-                if filter and len(filter) == 14:
+                if filter and len(filter) == 11 and filter[1] > yesterday:
                     typeinfos.append(filter)
     return typeinfos
 
@@ -54,12 +54,13 @@ def typeinfofilter(rs):
 def savetypeinfo(ctt):
     basesql = 'insert into articles (row_key, date, hot_news, lb_img, thumbnail_pics, source, topic, url, url_from, category, url_pv) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)'
     db.executemany(basesql, ctt)
+    print('savetypeinfo')
 
 # get news content.
 def getpagecontent(ct):
     ctt = []
     for i in ct:
-        u = i[8]
+        u = i[7]
         if u:
             content = utils.gethtml(u)
             rs = contentfilter(u, i[0], content)
@@ -104,11 +105,12 @@ def savecontentdata(data):
     # save data
     basesql = 'insert into article_contents (row_key, date, topic, content, source, url) values (%s, %s, %s, %s, %s, %s)'
     db.executemany(basesql, data)
+    print('savecontentdata')
 
 # get news ids.
 def getexistingid():
     global ids
-    sql = 'SELECT row_key FROM article_contents'
+    sql = "SELECT row_key FROM article_contents where date > '{}'".format(yesterday)
     cursor = db.select(sql)
     rs = cursor.fetchall()
     ids = [i[0] for i in rs]
