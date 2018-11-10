@@ -32,7 +32,7 @@ def gettypepage(url):
 
             v += 1
             #if len(rs['data']) > 0:
-            if len(ct) > 200 or v > 5000:
+            if len(ct) > 150 or v > 1000:
                 contentrs = getpagecontent(ct)
                 savetypeinfo(ct)
                 savecontentdata(contentrs)
