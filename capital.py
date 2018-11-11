@@ -44,7 +44,6 @@ def typeinfofilter(rs):
     if rs and len(rs['data']) > 0:
         for i in rs['data']:
             if not i['rowkey'] in ids:
-                ids.append(i['rowkey'])
                 filter = (i['rowkey'], i['date'], i['hotnews'], i['lbimg'][0]['src'], '$$'.join([i['src'] for i in i['miniimg']]), i['source'], i['topic'].replace("'","\\\'"), i['url'], i['urlfrom'], i['type'], i['urlpv'])
                 if filter and len(filter) == 11 and filter[1] > yesterday:
                     ids.append(i['rowkey'])
