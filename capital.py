@@ -30,13 +30,13 @@ def gettypepage(url):
             if content:
                 rsstr = content.decode(encoding = "utf-8")[5:-1]
                 rs = json.loads(rsstr)
-                ct = typeinfofilter(rs)
+                typeinfofilter(rs)
             v += 1
-            if  len(ct) > 150 or v > 1000:
-                contentrs = getpagecontent(ct)
-                savetypeinfo(ct)
+            if  len(typeinfos) > 150 or v > 1000:
+                contentrs = getpagecontent(typeinfos)
+                savetypeinfo(typeinfos)
                 savecontentdata(contentrs)
-                print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), i, len(ct))
+                print(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), i, len(typeinfos))
                 break
 
 # news data filter.
@@ -46,9 +46,7 @@ def typeinfofilter(rs):
             if not i['rowkey'] in ids:
                 filter = (i['rowkey'], i['date'], i['hotnews'], i['lbimg'][0]['src'], '$$'.join([i['src'] for i in i['miniimg']]), i['source'], i['topic'].replace("'","\\\'"), i['url'], i['urlfrom'], i['type'], i['urlpv'])
                 if filter and len(filter) == 11 and filter[1] > yesterday:
-                    ids.append(i['rowkey'])
                     typeinfos.append(filter)
-    return typeinfos
 
 # save type info.
 def savetypeinfo(ctt):
