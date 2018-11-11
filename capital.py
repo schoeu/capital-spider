@@ -4,6 +4,7 @@ import json
 import time
 import requests
 from bs4 import BeautifulSoup
+from pybloom import ScalableBloomFilter
 import utils
 import db
 import conf
@@ -108,7 +109,7 @@ def savecontentdata(data):
 # get news ids.
 def getexistingid():
     global ids
-    sql = "SELECT row_key FROM article_contents where date > '{}'".format(yesterday)
+    sql = "SELECT row_key FROM articles where date > '{}'".format(yesterday)
     cursor = db.select(sql)
     rs = cursor.fetchall()
     ids = [i[0] for i in rs]
