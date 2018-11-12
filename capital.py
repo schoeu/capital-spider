@@ -4,7 +4,6 @@ import json
 import time
 import requests
 from bs4 import BeautifulSoup
-from pybloom import ScalableBloomFilter
 import utils
 import db
 import conf
